@@ -1,26 +1,183 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-primary-50: #eef2ff;
+  --color-primary-100: #e0e7ff;
+  --color-primary-200: #c7d2fe;
+  --color-primary-300: #a5b4fc;
+  --color-primary-400: #818cf8;
+  --color-primary-500: #6366f1;
+  --color-primary-600: #4f46e5;
+  --color-primary-700: #4338ca;
+  --color-primary-800: #3730a3;
+  --color-primary-900: #312e81;
+
+  --color-success-50: #ecfdf5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+
+  --color-warning-50: #fffbeb;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+
+  --color-danger-50: #fff1f2;
+  --color-danger-500: #f43f5e;
+  --color-danger-600: #e11d48;
+  --color-danger-700: #be123c;
+
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    @apply text-[var(--color-text)] antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    background-color: var(--color-surface);
+  }
+  input, select, textarea {
+    @apply border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white;
+    @apply transition-all duration-200;
+    &:focus {
+      @apply border-primary-500;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+      outline: none;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility card {
+  @apply bg-white rounded-2xl border shadow-xs transition-all duration-200;
+}
+
+@utility card-hover {
+  @apply card hover:shadow-md hover:-translate-y-0.5;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium;
+  @apply transition-all duration-150 active:scale-[0.97];
+  @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/30;
+  @apply disabled:opacity-50 disabled:pointer-events-none select-none;
+}
+
+@utility btn-primary {
+  @apply btn bg-primary-600 text-white hover:bg-primary-700 shadow-xs hover:shadow-sm;
+}
+
+@utility btn-secondary {
+  @apply btn bg-white text-gray-700 border hover:bg-gray-50 hover:border-gray-300;
+}
+
+@utility btn-ghost {
+  @apply btn text-gray-600 hover:bg-gray-100 hover:text-gray-900;
+}
+
+@utility btn-success {
+  @apply btn bg-success-600 text-white hover:bg-success-700 shadow-xs hover:shadow-sm;
+}
+
+@utility btn-danger {
+  @apply btn bg-danger-600 text-white hover:bg-danger-700 shadow-xs hover:shadow-sm;
+}
+
+@utility btn-sm {
+  @apply px-3 py-1.5 text-xs rounded-lg;
+}
+
+@utility btn-lg {
+  @apply px-6 py-3 text-base rounded-xl;
+}
+
+@utility input {
+  @apply w-full rounded-xl border bg-white px-4 py-2.5 text-sm placeholder:text-gray-400;
+  @apply border-gray-300 focus:border-primary-500;
+  @apply transition-all duration-200;
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    outline: none;
+  }
+}
+
+@utility chip {
+  @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-all duration-150;
+}
+
+@utility chip-green {
+  @apply chip bg-success-50 text-success-700 border-success-500/20;
+}
+
+@utility chip-amber {
+  @apply chip bg-warning-50 text-warning-600 border-warning-500/20;
+}
+
+@utility chip-rose {
+  @apply chip bg-danger-50 text-danger-600 border-danger-500/20;
+}
+
+@utility chip-slate {
+  @apply chip bg-slate-50 text-slate-600 border-slate-200;
+}
+
+@utility chip-indigo {
+  @apply chip bg-primary-50 text-primary-700 border-primary-500/20;
+}
+
+@utility chip-sky {
+  @apply chip bg-sky-50 text-sky-700 border-sky-500/20;
+}
+
+@utility chip-violet {
+  @apply chip bg-violet-50 text-violet-700 border-violet-500/20;
+}
+
+@utility card-section {
+  @apply card p-5 lg:p-6;
+  & > * + * { margin-top: 1rem; }
+}
+
+@utility section-label {
+  @apply text-xs font-semibold text-gray-400 uppercase tracking-wider;
+}
+
+@utility skeleton {
+  @apply bg-gray-100 rounded-xl animate-pulse;
+}
+
+@utility fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@utility slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@utility scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }

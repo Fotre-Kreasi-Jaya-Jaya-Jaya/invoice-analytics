@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("user")
+  createdAt    DateTime @default(now())
+  lastLoginAt  DateTime?
+
+  batches Batch[]
+}
+
+model Batch {
+  id              String      @id @default(cuid())
+  name            String?
+  sourceType      String      // single | multiple | folder | zip
+  storageMode     String      @default("PERMANENT") // PERMANENT | EPHEMERAL
+  expiresAt       DateTime?
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          String      @default("UPLOADED") // UPLOADED | PROCESSING | COMPLETED | PARTIAL | FAILED
+  totalFiles      Int         @default(0)
+  completedFiles  Int         @default(0)
+  failedFiles     Int         @default(0)
+  createdAt       DateTime    @default(now())
+  completedAt     DateTime?
+
+  documents Document[]
+}
+
+model Document {
+  id                String     @id @default(cuid())
+  batchId           String
+  batch             Batch      @relation(fields: [batchId], references: [id])
+  originalName      String
+  safeName          String
+  mimeType          String     @default("application/pdf")
+  sizeBytes         Int
+  sha256            String?
+  storagePath       String?
+  pageCount         Int        @default(0)
+  status            String     @default("UPLOADED") // UPLOADED | EXTRACTING | OCR | ANALYZING | VALIDATING | COMPLETED | FAILED
+  errorCode         String?
+  errorMessage      String?
+  extractedText     String?
+  usedOcr           Boolean    @default(false)
+  ocrPageNumbers    String?    // JSON array
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  invoice         Invoice?
+  validationIssues ValidationIssue[]
+}
+
+model Invoice {
+  id                   String   @id @default(cuid())
+  documentId           String   @unique
+  document             Document @relation(fields: [documentId], references: [id])
+  reviewStatus         String   @default("PENDING") // PENDING | NEEDS_REVIEW | REVIEWED
+  confidence           Float?
+  invoiceType          String?  // STANDARD | PROFORMA | DOWN_PAYMENT | SETTLEMENT | CREDIT_NOTE | UNKNOWN
+  invoiceNumber        String?
+  invoiceDate          String?  // ISO date string
+  dueDate              String?
+  currency             String   @default("IDR")
+  poNumber             String?
+  deliveryNumber       String?
+  taxInvoiceNumber     String?
+  vendorName           String?
+  vendorAddress        String?
+  vendorTaxId          String?
+  vendorPhone          String?
+  vendorEmail          String?
+  buyerName            String?
+  buyerAddress         String?
+  buyerTaxId           String?
+  subtotal             Decimal? @db.Decimal(18, 2)
+  discount             Decimal? @db.Decimal(18, 2)
+  shipping             Decimal? @db.Decimal(18, 2)
+  dpp                  Decimal? @db.Decimal(18, 2)
+  vatRate              Decimal? @db.Decimal(5, 4)
+  vatAmount            Decimal? @db.Decimal(18, 2)
+  withholdingTaxRate   Decimal? @db.Decimal(5, 4)
+  withholdingTaxAmount Decimal? @db.Decimal(18, 2)
+  otherCharges         Decimal? @db.Decimal(18, 2)
+  grandTotal           Decimal? @db.Decimal(18, 2)
+  paidAmount           Decimal? @db.Decimal(18, 2)
+  downPaymentAmount    Decimal? @db.Decimal(18, 2)
+  remainingAmount      Decimal? @db.Decimal(18, 2)
+  paymentTerms         String?
+  bankName             String?
+  bankAccountName      String?
+  bankAccountNumber    String?
+  category             String?
+  notes                String?
+  rawAiResponse        String?
+  modelUsed            String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  lineItems       LineItem[]
+  validationIssues ValidationIssue[]
+  fieldSources    FieldSource[]
+  chatThreads     ChatThread[]
+}
+
+model LineItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  lineNumber  Int
+  description String?
+  sku         String?
+  quantity    Decimal? @db.Decimal(18, 4)
+  unit        String?
+  unitPrice   Decimal? @db.Decimal(18, 2)
+  discount    Decimal? @db.Decimal(18, 2)
+  taxRate     Decimal? @db.Decimal(5, 4)
+  lineTotal   Decimal? @db.Decimal(18, 2)
+  pageNumber  Int?
+  confidence  Float?
+  createdAt   DateTime @default(now())
+}
+
+model ValidationIssue {
+  id          String   @id @default(cuid())
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id])
+  invoiceId   String?
+  invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
+  severity    String   // INFO | WARNING | ERROR
+  code        String
+  title       String
+  description String
+  field       String?
+  expected    String?
+  actual      String?
+  pageNumber  Int?
+  resolved    Boolean  @default(false)
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model ChatThread {
+  id        String   @id @default(cuid())
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  batchId   String?
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+
+  messages ChatMessage[]
+}
+
+model ChatMessage {
+  id          String   @id @default(cuid())
+  threadId    String
+  thread      ChatThread @relation(fields: [threadId], references: [id])
+  role        String   // user | assistant
+  content     String
+  citations   String?  // JSON array
+  tokenUsage  String?  // JSON
+  latencyMs   Int?
+  createdAt   DateTime @default(now())
+}
+
+model FieldSource {
+  id        String   @id @default(cuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  fieldPath String
+  pageNumber Int?
+  quote     String?
+  confidence Float?
+  createdAt DateTime @default(now())
+}
