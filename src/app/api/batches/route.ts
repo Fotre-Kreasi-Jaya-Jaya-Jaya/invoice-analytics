@@ -18,6 +18,10 @@ export async function POST(req: Request) {
   if (!session) return unauthorized();
 
   try {
+    // Guard stale session: user may have been wiped by a DB reset.
+    const user = await prisma.user.findUnique({ where: { id: session.id } });
+    if (!user) return unauthorized();
+
     const formData = await req.formData();
     const result = await processUpload(formData, session.id);
     return NextResponse.json(result, { status: 201 });

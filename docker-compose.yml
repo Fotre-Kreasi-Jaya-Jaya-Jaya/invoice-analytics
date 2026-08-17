@@ -1,42 +1,57 @@
-services:
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/invoice_analytics
-      - NINEROUTER_BASE_URL=${NINEROUTER_BASE_URL}
-      - NINEROUTER_API_KEY=${NINEROUTER_API_KEY}
-      - NINEROUTER_MODEL=${NINEROUTER_MODEL:-high-availability-copy}
-      - JWT_SECRET=${JWT_SECRET}
-      - EPHEMERAL_TTL_HOURS=${EPHEMERAL_TTL_HOURS:-24}
-    volumes:
-      - storage_data:/app/storage
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: unless-stopped
+name: invoice-analytics
 
-  db:
+services:
+  postgres:
     image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: invoice_analytics
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+    container_name: invoice-analytics-postgres
+    restart: unless-stopped
     ports:
-      - "5433:5432"
+      - '5497:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-invoiceanalytics123}
+      POSTGRES_DB: invoice_analytics
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./prisma/migrations:/docker-entrypoint-initdb.d  # optional for pre-seeded DB
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d invoice_analytics
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+
+  app:
+    image: teamdevfotre/invoice-analytics:latest
+    container_name: invoice-analytics-app
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '3005:3000'
+    volumes:
+      - storage_data:/app/storage
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: 'postgresql://postgres:${POSTGRES_PASSWORD:-invoiceanalytics123}@postgres:5432/invoice_analytics'
+      NINEROUTER_BASE_URL: '${NINEROUTER_BASE_URL:-https://omni.aidonext.com/v1}'
+      NINEROUTER_API_KEY: '${NINEROUTER_API_KEY:-sk-c264ab428cf307bb-545ab3-c9da7308}'
+      NINEROUTER_MODEL: '${NINEROUTER_MODEL:-high-availability-copy}'
+      JWT_SECRET: '${JWT_SECRET:-1ab450b9e823ce55ecac80f6e58645f22efef95408f0b3fb9b82945921767c3b}'
+      NEXT_PUBLIC_APP_NAME: 'Invoice Analytics AI'
+      EPHEMERAL_TTL_HOURS: '24'
+    labels:
+      - traefik.enable=true
+      - 'traefik.http.routers.invoice-analytics.rule=Host(`nexmiro.space`) || Host(`www.nexmiro.space`)'
+      - traefik.http.routers.invoice-analytics.entrypoints=websecure
+      - traefik.http.routers.invoice-analytics.tls.certresolver=letsencrypt
+      - traefik.http.services.invoice-analytics.loadbalancer.server.port=3000
 
 volumes:
-  pgdata:
+  postgres_data:
+    name: invoice_analytics_postgres_data
   storage_data:
+    name: invoice_analytics_storage_data

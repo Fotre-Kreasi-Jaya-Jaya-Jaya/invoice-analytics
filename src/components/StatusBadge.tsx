@@ -1,27 +1,116 @@
+import React from "react";
+
 export function StatusBadge({ status }: { status: string }) {
-  const map: Record<string, { label: string; cls: string; dot: string }> = {
-    COMPLETED: { label: "Selesai", cls: "chip-green", dot: "bg-success-500" },
-    PROCESSING: { label: "Memproses", cls: "chip-sky", dot: "bg-sky-500 animate-pulse" },
-    UPLOADED: { label: "Diupload", cls: "chip-slate", dot: "bg-slate-400" },
-    EXTRACTING: { label: "Ekstraksi", cls: "chip-sky", dot: "bg-sky-500 animate-pulse" },
-    OCR: { label: "OCR", cls: "chip-violet", dot: "bg-violet-500 animate-pulse" },
-    ANALYZING: { label: "Analisis AI", cls: "chip-indigo", dot: "bg-primary-500 animate-pulse" },
-    VALIDATING: { label: "Validasi", cls: "chip-amber", dot: "bg-warning-500 animate-pulse" },
-    FAILED: { label: "Gagal", cls: "chip-rose", dot: "bg-danger-500" },
-    PARTIAL: { label: "Sebagian", cls: "chip-amber", dot: "bg-warning-500" },
-    PENDING: { label: "Belum direview", cls: "chip-amber", dot: "bg-warning-500" },
-    NEEDS_REVIEW: { label: "Perlu review", cls: "chip-rose", dot: "bg-danger-500" },
-    REVIEWED: { label: "Sudah direview", cls: "chip-green", dot: "bg-success-500" },
+  const map: Record<
+    string,
+    { label: string; bg: string; text: string; border: string; dot: string; pulse?: boolean }
+  > = {
+    COMPLETED: {
+      label: "Selesai",
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      border: "border-emerald-200",
+      dot: "bg-emerald-500",
+    },
+    REVIEWED: {
+      label: "Sudah Review",
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+      border: "border-emerald-200",
+      dot: "bg-emerald-500",
+    },
+    PROCESSING: {
+      label: "Diproses",
+      bg: "bg-sky-50",
+      text: "text-sky-700",
+      border: "border-sky-200",
+      dot: "bg-sky-500",
+      pulse: true,
+    },
+    UPLOADED: {
+      label: "Diunggah",
+      bg: "bg-indigo-50",
+      text: "text-indigo-700",
+      border: "border-indigo-200",
+      dot: "bg-indigo-500",
+      pulse: true,
+    },
+    EXTRACTING: {
+      label: "Ekstraksi",
+      bg: "bg-indigo-50",
+      text: "text-indigo-700",
+      border: "border-indigo-200",
+      dot: "bg-indigo-500",
+      pulse: true,
+    },
+    ANALYZING: {
+      label: "Analisis AI",
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
+      dot: "bg-purple-500",
+      pulse: true,
+    },
+    VALIDATING: {
+      label: "Validasi",
+      bg: "bg-sky-50",
+      text: "text-sky-700",
+      border: "border-sky-200",
+      dot: "bg-sky-500",
+      pulse: true,
+    },
+    OCR: {
+      label: "OCR",
+      bg: "bg-purple-50",
+      text: "text-purple-700",
+      border: "border-purple-200",
+      dot: "bg-purple-500",
+      pulse: true,
+    },
+    FAILED: {
+      label: "Gagal",
+      bg: "bg-rose-50",
+      text: "text-rose-700",
+      border: "border-rose-200",
+      dot: "bg-rose-500",
+    },
+    NEEDS_REVIEW: {
+      label: "Perlu Review",
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      dot: "bg-amber-500",
+    },
+    PARTIAL: {
+      label: "Sebagian",
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+      border: "border-amber-200",
+      dot: "bg-amber-500",
+    },
+    PENDING: {
+      label: "Menunggu",
+      bg: "bg-slate-100",
+      text: "text-slate-700",
+      border: "border-slate-200",
+      dot: "bg-slate-400",
+    },
   };
+
   const s = map[status] || {
-    label: status,
-    cls: "chip-slate",
+    label: status ? status.replace(/_/g, " ") : "Unknown",
+    bg: "bg-slate-100",
+    text: "text-slate-700",
+    border: "border-slate-200",
     dot: "bg-slate-400",
   };
+
   return (
-    <span className={s.cls}>
-      <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
-      {s.label}
+    <span
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${s.bg} ${s.text} ${s.border} whitespace-nowrap shadow-xs`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot} ${s.pulse ? "animate-pulse" : ""}`} />
+      <span>{s.label}</span>
     </span>
   );
 }

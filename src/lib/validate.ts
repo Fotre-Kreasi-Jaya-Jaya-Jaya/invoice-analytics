@@ -91,15 +91,23 @@ export function validateInvoice(input: ValidationInput): ValidationResult {
   if (input.vatRate != null && input.dpp != null && input.vatAmount != null) {
     const expectedVat = input.dpp * input.vatRate;
     if (!closeEnough(expectedVat, input.vatAmount)) {
-      issues.push({
-        severity: "WARNING",
-        code: "VAT_MISMATCH",
-        title: "PPN tidak cocok",
-        description: `DPP × tarif PPN seharusnya ${expectedVat.toFixed(2)}, tetapi tertulis ${input.vatAmount}.`,
-        field: "vatAmount",
-        expected: expectedVat.toFixed(2),
-        actual: String(input.vatAmount),
-      });
+      // Check PMK 131/2024 DPP Nilai Lain scheme:
+      // DPP = 11/12 × harga jual, PPN = 12% × DPP
+      // If vatAmount ≈ 12% × DPP, accept as valid (effective rate looks like 11% on selling price)
+      const vatAt12 = input.dpp * 0.12;
+      const isDppNilaiLain = closeEnough(vatAt12, input.vatAmount);
+
+      if (!isDppNilaiLain) {
+        issues.push({
+          severity: "WARNING",
+          code: "VAT_MISMATCH",
+          title: "PPN tidak cocok",
+          description: `DPP × tarif PPN seharusnya ${expectedVat.toFixed(2)}, tetapi tertulis ${input.vatAmount}.`,
+          field: "vatAmount",
+          expected: expectedVat.toFixed(2),
+          actual: String(input.vatAmount),
+        });
+      }
     }
   }
 
